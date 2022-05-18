@@ -33,6 +33,10 @@ ul {
     width: 34px;
 }
 
+.square--last-clicked {
+    background-color: rgb(161, 198, 209);
+}
+
 .square:focus {
     outline: none;
 }

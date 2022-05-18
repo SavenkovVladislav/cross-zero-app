@@ -6,7 +6,7 @@ import './index.css';
 function Square(props) {
     return (
         <button
-            className='square'
+            className={props.isLastClicked ? 'square square--last-clicked' : 'square'} // в зависимости от значения isLastClicked в атрибут className записывается та или иная строка
             onClick={props.onClick}
         >
             {props.value}
@@ -21,10 +21,11 @@ class Board extends React.Component {
             <Square
                 value={this.props.squares[i]} // в компоненте Boart мной не описан конструктор с объявленными пропасами, но по умолчанию, он существует и принимает их.
                 onClick={() => this.props.onClick(i)}
+                isLastClicked={this.props.lastClickedCellIndex === i} // в выражении lastClickCellIndex === i возвращается true, если кликнули на новый квадрат то ничего не возвращается
             />
         );
     }
-
+    // завести компонент BoardRow в котором отрисовывать ячейки 
     render() {
         return (
             <div>
@@ -57,6 +58,7 @@ class Game extends React.Component {
                     squares: Array(9).fill(null),
                 },
             ],
+            lastClickedCellIndexHistory: [null],
             stepNumber: 0,
             xIsNext: true,
         };
@@ -64,10 +66,11 @@ class Game extends React.Component {
 
     handleClick(i) {
         const history = this.state.history.slice(0, this.state.stepNumber + 1);
-        const current = history[history.length - 1];
+        const indexHistory = this.state.lastClickedCellIndexHistory.slice(0, this.state.stepNumber + 1)
+        const current = history[history.length - 1]; // записываем в current последний элемент массива history
         const squares = current.squares.slice();
 
-        if (calculateWinner(squares) || squares[i]) {
+        if (calculateWinner(squares) || squares[i]) { // в squares[i] может лежать либо null либо "Х" либо "О" 
             return;
         }
 
@@ -78,6 +81,9 @@ class Game extends React.Component {
                 {
                     squares: squares
                 }
+            ]),
+            lastClickedCellIndexHistory: indexHistory.concat([
+                i,
             ]),
             stepNumber: history.length,
             xIsNext: !this.state.xIsNext,
@@ -93,10 +99,13 @@ class Game extends React.Component {
 
     render() {
         const history = this.state.history;
-        //const current = history[history.length - 1]; // запись history[...] означает, что мы обращаемся к элементу массива history под каким-то номером, в нашем случае обращение идет именно к последнему элементу и записываем этот элемент массива в переменную current.
+        const indexHistory = this.state.lastClickedCellIndexHistory;
+
         const current = history[this.state.stepNumber];
+        const currentIndex = indexHistory[this.state.stepNumber];
+
         const winner = calculateWinner(current.squares); // вызывается функция calculateWinner, в параметрах вызывается свойство squares объекта current, который описан строчкой выше
-        // ?
+
         const moves = history.map((step, move) => {
             const desc = move ?
                 'Go to move #' + move :
@@ -104,7 +113,7 @@ class Game extends React.Component {
 
             return (
                 <li key={move}>
-                    <button onClick={() => this.jumpTo(move)}>{desc}</button>
+                    <button onClick={() => this.jumpTo(move)}>{desc}</button> {/* у каждой кнопки есть СВОЯ стрелочная функция и каждая кнопка имеет свое значение move, которое передается в параметр jumpTo */}
                 </li>
             )
         })
@@ -122,6 +131,7 @@ class Game extends React.Component {
                     <Board
                         squares={current.squares}
                         onClick={(i) => this.handleClick(i)}
+                        lastClickedCellIndex={currentIndex}
                     />
                 </div>
                 <div className="game-info">
