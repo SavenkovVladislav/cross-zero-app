@@ -1,3 +1,4 @@
+import { toHaveStyle } from '@testing-library/jest-dom/dist/matchers';
 import React from 'react';
 import ReactDOM from 'react-dom';
 
@@ -14,6 +15,32 @@ function Square(props) {
     );
 }
 
+class BoardRow extends React.Component {
+    render() {
+        return (
+            <div className='board-row'>
+                {
+                    Array(3) // действия, которые описаны ниже проходят один раз
+                        .fill() // результат [undefined,undefined,undefined]
+                        .map((item, index) => {
+                            return index + this.props.offset
+                        }) // результат при первом вызове компонента BoardRow [0,1,2], при втором [3,4,5]
+                        .map(item => {
+                            return (
+                                <Square
+                                    key={item}
+                                    value={this.props.squares[item]} // в компоненте Boart мной не описан конструктор с объявленными пропасами, но по умолчанию, он существует и принимает их.
+                                    onClick={() => this.props.onClick(item)}
+                                    isLastClicked={this.props.lastClickedCellIndex === item} // в выражении lastClickCellIndex === i возвращается true, если кликнули на новый квадрат то ничего не возвращается
+                                />
+                            )
+                        }) // мы маппим массив [0,1,2] (при первом вызове BoardRow) и пихаем в item 0,1,2
+                }
+            </div>
+        );
+    }
+
+}
 
 class Board extends React.Component {
     renderSquare(i) {
@@ -25,25 +52,24 @@ class Board extends React.Component {
             />
         );
     }
-    // завести компонент BoardRow в котором отрисовывать ячейки 
+
     render() {
         return (
             <div>
-                <div className="board-row">
-                    {this.renderSquare(0)}
-                    {this.renderSquare(1)}
-                    {this.renderSquare(2)}
-                </div>
-                <div className="board-row">
-                    {this.renderSquare(3)}
-                    {this.renderSquare(4)}
-                    {this.renderSquare(5)}
-                </div>
-                <div className="board-row">
-                    {this.renderSquare(6)}
-                    {this.renderSquare(7)}
-                    {this.renderSquare(8)}
-                </div>
+                {
+                    [0, 3, 6].map(item => {
+                        return (
+                            <BoardRow
+                                key={item}
+                                offset={item}
+                                squares={this.props.squares}
+                                onClick={this.props.onClick}
+                                lastClickedCellIndex={this.props.lastClickedCellIndex}
+                            />
+                        )
+                    }
+                    )
+                }
             </div>
         );
     }
@@ -61,6 +87,7 @@ class Game extends React.Component {
             lastClickedCellIndexHistory: [null],
             stepNumber: 0,
             xIsNext: true,
+            isAscending: true,
         };
     }
 
@@ -97,6 +124,12 @@ class Game extends React.Component {
         });
     }
 
+    switchHandler() {
+        this.setState({
+            isAscending: !this.state.isAscending,
+        });
+    }
+
     render() {
         const history = this.state.history;
         const indexHistory = this.state.lastClickedCellIndexHistory;
@@ -118,6 +151,10 @@ class Game extends React.Component {
             )
         })
 
+        if (!this.state.isAscending) {
+            moves.reverse()
+        }
+
         let status;
         if (winner) {
             status = 'Победитель: ' + winner;
@@ -137,6 +174,7 @@ class Game extends React.Component {
                 <div className="game-info">
                     <div>{status}</div>
                     <ol>{moves}</ol>
+                    <button onClick={() => this.switchHandler()}>Switch</button>
                 </div>
             </div>
         );
