@@ -5,9 +5,18 @@ import ReactDOM from 'react-dom';
 import './index.css';
 
 function Square(props) {
+    let className = 'square';
+    if (props.isLastClicked) {
+        className += ' square--last-clicked';
+    }
+
+    if (props.isWinner) {
+        className += ' square--winner'
+    }
+
     return (
         <button
-            className={props.isLastClicked ? 'square square--last-clicked' : 'square'} // в зависимости от значения isLastClicked в атрибут className записывается та или иная строка
+            className={className}
             onClick={props.onClick}
         >
             {props.value}
@@ -25,6 +34,7 @@ class BoardRow extends React.Component {
                         .map((item, index) => {
                             return index + this.props.offset
                         }) // результат при первом вызове компонента BoardRow [0,1,2], при втором [3,4,5]
+                        // [a,b,c].map(f) -> [f(a),f(b),f(c)]
                         .map(item => {
                             return (
                                 <Square
@@ -32,6 +42,8 @@ class BoardRow extends React.Component {
                                     value={this.props.squares[item]} // в компоненте Boart мной не описан конструктор с объявленными пропасами, но по умолчанию, он существует и принимает их.
                                     onClick={() => this.props.onClick(item)}
                                     isLastClicked={this.props.lastClickedCellIndex === item} // в выражении lastClickCellIndex === i возвращается true, если кликнули на новый квадрат то ничего не возвращается
+
+                                    isWinner={this.props.winnerCombination.includes(item)}
                                 />
                             )
                         }) // мы маппим массив [0,1,2] (при первом вызове BoardRow) и пихаем в item 0,1,2
@@ -39,7 +51,6 @@ class BoardRow extends React.Component {
             </div>
         );
     }
-
 }
 
 class Board extends React.Component {
@@ -65,6 +76,7 @@ class Board extends React.Component {
                                 squares={this.props.squares}
                                 onClick={this.props.onClick}
                                 lastClickedCellIndex={this.props.lastClickedCellIndex}
+                                winnerCombination={this.props.winnerCombination}
                             />
                         )
                     }
@@ -97,7 +109,7 @@ class Game extends React.Component {
         const current = history[history.length - 1]; // записываем в current последний элемент массива history
         const squares = current.squares.slice();
 
-        if (calculateWinner(squares) || squares[i]) { // в squares[i] может лежать либо null либо "Х" либо "О" 
+        if (calculateWinner(squares).winner || squares[i]) { // в squares[i] может лежать либо null либо "Х" либо "О" 
             return;
         }
 
@@ -137,7 +149,9 @@ class Game extends React.Component {
         const current = history[this.state.stepNumber];
         const currentIndex = indexHistory[this.state.stepNumber];
 
-        const winner = calculateWinner(current.squares); // вызывается функция calculateWinner, в параметрах вызывается свойство squares объекта current, который описан строчкой выше
+        const winner = calculateWinner(current.squares).winner; // вызывается функция calculateWinner, в параметрах вызывается свойство squares объекта current, который описан строчкой выше
+
+        const winnerCombination = calculateWinner(current.squares).winnerCombination;
 
         const moves = history.map((step, move) => {
             const desc = move ?
@@ -169,6 +183,7 @@ class Game extends React.Component {
                         squares={current.squares}
                         onClick={(i) => this.handleClick(i)}
                         lastClickedCellIndex={currentIndex}
+                        winnerCombination={winnerCombination}
                     />
                 </div>
                 <div className="game-info">
@@ -197,10 +212,16 @@ function calculateWinner(squares) {
     for (let i = 0; i < lines.length; i++) {
         const [a, b, c] = lines[i]; // const [a, b, c] это специальная запись создания нескольких перемынных сразу или деструктуризация, в нашем случае мы записываем в переменные a,b,c, которые мы создаем, i-тый элемент массива lines, т.е. a,b,c при первой итерации цикла будут равны 0,1,2
         if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
-            return squares[a];
+            return {
+                winner: squares[a],
+                winnerCombination: lines[i],
+            };
         }
     }
-    return null;
+    return {
+        winner: null,
+        winnerCombination: [],
+    };
 }
 
 // ========================================

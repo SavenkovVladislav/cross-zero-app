@@ -37,6 +37,12 @@ ul {
     background-color: rgb(161, 198, 209);
 }
 
+.square--winner {
+    -webkit-box-shadow: 0px 0px 0px 5px rgba(34, 60, 80, 0.2) inset;
+    -moz-box-shadow: 0px 0px 0px 5px rgba(34, 60, 80, 0.2) inset;
+    box-shadow: 0px 0px 0px 5px rgba(34, 60, 80, 0.2) inset;
+}
+
 .square:focus {
     outline: none;
 }
