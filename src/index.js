@@ -1,4 +1,3 @@
-import { toHaveStyle } from '@testing-library/jest-dom/dist/matchers';
 import React from 'react';
 import ReactDOM from 'react-dom';
 
@@ -6,12 +5,8 @@ import './index.css';
 
 function Square(props) {
     let className = 'square';
-    if (props.isLastClicked) {
-        className += ' square--last-clicked';
-    }
-
-    if (props.isWinner) {
-        className += ' square--winner'
+    if (props.isLastClicked || props.isWinner) {
+        className += ' square--blue';
     }
 
     return (
@@ -172,6 +167,8 @@ class Game extends React.Component {
         let status;
         if (winner) {
             status = 'Победитель: ' + winner;
+        } else if (this.state.history.slice(0, this.state.stepNumber + 1).length === 10) {
+            status = 'Ничья';
         } else {
             status = 'Следующий игрок: ' + (this.state.xIsNext ? 'X' : 'O');
         }
